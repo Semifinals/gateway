@@ -9,7 +9,7 @@ public static class BlogController
     public static readonly string BlogServiceFunctionKey = Environment.GetEnvironmentVariable("BlogServiceFunctionKey")!;
     
     [FunctionName("GetBlog")]
-    public static async Task<IActionResult> GetBlog(
+    public static async Task<HttpResponseMessage> GetBlog(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "blogs/{slug:regex(^[A-Za-z0-9_-]{{1,63}}$)}")] HttpRequest req,
         string slug)
     {
@@ -24,7 +24,7 @@ public static class BlogController
     }
 
     [FunctionName("GetBlogsFiltered")]
-    public static async Task<IActionResult> GetBlogsFiltered(
+    public static async Task<HttpResponseMessage> GetBlogsFiltered(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "blogs/filter")] HttpRequest req)
     {
         return await Flow.Handle(
@@ -38,7 +38,7 @@ public static class BlogController
     }
 
     [FunctionName("CreateBlog")]
-    public static async Task<IActionResult> CreateBlog(
+    public static async Task<HttpResponseMessage> CreateBlog(
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "blogs")] HttpRequest req)
     {
         return await Flow.Handle(
@@ -52,7 +52,7 @@ public static class BlogController
     }
 
     [FunctionName("DeleteBlog")]
-    public static async Task<IActionResult> DeleteBlog(
+    public static async Task<HttpResponseMessage> DeleteBlog(
         [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "blogs/{id:int}")] HttpRequest req,
         int id)
     {

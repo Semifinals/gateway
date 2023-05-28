@@ -18,15 +18,26 @@ public class SemifinalsAuthenticator : Authenticator
     {
         // TODO: Implement auth API and setup correct authentication
 
-        bool inDevEnvironment = Environment.GetEnvironmentVariable("Development") != null;
-        return inDevEnvironment;
+        return _CheckTemporaryAuthKey();
     }
     
     public override async Task<bool> Authorize()
     {
         // TODO: Implement auth API and setup correct authorization
 
-        bool inDevEnvironment = Environment.GetEnvironmentVariable("Development") != null;
-        return await Task.Run(() => inDevEnvironment);
+        return await Task.Run(() => _CheckTemporaryAuthKey());
+    }
+
+    private bool _CheckTemporaryAuthKey()
+    {
+        string? authHeader = Request.Headers["Authorization"].FirstOrDefault(defaultValue: null);
+
+        if (authHeader == null)
+            return false;
+
+        if (authHeader != Environment.GetEnvironmentVariable("TemporaryAuthKey"))
+            return false;
+
+        return true;
     }
 }
