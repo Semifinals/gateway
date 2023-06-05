@@ -10,7 +10,7 @@ public static class BlogController
     
     [FunctionName("GetBlog")]
     public static async Task<HttpResponseMessage> GetBlog(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "blogs/{slug:regex(^[A-Za-z0-9_-]{{1,63}}$)}")] HttpRequest req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "blogs/{slug:regex(^(?!(filter)$).*$)}")] HttpRequest req,
         string slug)
     {
         return await Flow.Handle(
@@ -18,7 +18,6 @@ public static class BlogController
                 .Redirect($"https://blog.api.semifinals.co/{slug}")
                 .AddHeader("x-functions-key", BlogServiceFunctionKey),
             flow => flow
-                .Pipe(new SemifinalsAuthenticator(req))
                 .Pipe(new Passthrough())
                 .Response());
     }
@@ -29,10 +28,9 @@ public static class BlogController
     {
         return await Flow.Handle(
             (await Request.FromHttp(req))
-                .Redirect("https://blog.api.semifinals.co/filter")
+                .Redirect($"https://blog.api.semifinals.co/filter{req.QueryString}")
                 .AddHeader("x-functions-key", BlogServiceFunctionKey),
             flow => flow
-                .Pipe(new SemifinalsAuthenticator(req))
                 .Pipe(new Passthrough())
                 .Response());
     }
@@ -46,7 +44,7 @@ public static class BlogController
                 .Redirect("https://blog.api.semifinals.co/")
                 .AddHeader("x-functions-key", BlogServiceFunctionKey),
             flow => flow
-                .Pipe(new SemifinalsAuthenticator(req, true, 1))
+                .Pipe(new SemifinalsAuthenticator(req, true))
                 .Pipe(new Passthrough())
                 .Response());
     }
@@ -61,7 +59,7 @@ public static class BlogController
                 .Redirect($"https://blog.api.semifinals.co/{id}")
                 .AddHeader("x-functions-key", BlogServiceFunctionKey),
             flow => flow
-                .Pipe(new SemifinalsAuthenticator(req, true, 1))
+                .Pipe(new SemifinalsAuthenticator(req, true))
                 .Pipe(new Passthrough())
                 .Response());
     }
