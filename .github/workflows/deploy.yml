@@ -1,41 +1,37 @@
-name: Deploy
+name: Azure ARM
 
 on:
   push:
     branches:
       - production
+      - main
+  workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.'
-  DOTNET_VERSION: '6.0.x'
-  
+  ENVIRONMENT: ${{ github.ref == 'refs/heads/production' && 'prod' || 'dev' }}
+  REGION: australiaeast
+
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: 'Checkout GitHub Action'
-        uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Setup DotNet ${{ env.DOTNET_VERSION }} Environment
-        uses: actions/setup-dotnet@v1
+      - name: Log into Azure
+        uses: azure/login@v1
         with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Add Github Packages Source
-        run: dotnet nuget add source --username Semifinals --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/Semifinals/index.json"
-
-      - name: 'Resolve Project Dependencies Using Dotnet'
-        shell: bash
-        run: |
-          pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
-          dotnet build --configuration Release --output ./output
-          popd
-
-      - name: 'Run Azure Functions Action'
-        uses: Azure/functions-action@v1
-        id: fa
+      - name: Build infrastructure with Bicep
+        id: deploy
+        uses: azure/arm-deploy@v1
         with:
-          app-name: 'semifinals-gateway'
-          slot-name: 'Production'
-          package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_700D8A8817324F148064DF1D559AF700 }}
+          scope: "subscription"
+          template: .bicep/main.bicep
+          parameters: "environment=${{ env.ENVIRONMENT }} location=${{ env.REGION }}"
+          failOnStdErr: false
+          region: australiaeast
+
+      - name: Log out of Azure
+        run: az logout

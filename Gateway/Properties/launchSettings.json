@@ -1,9 +1,0 @@
-{
-  "profiles": {
-    "Gateway": {
-      "commandName": "Project",
-      "commandLineArgs": "--port 7146",
-      "launchBrowser": false
-    }
-  }
-}
